@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClashZone</title>
+    <title>TriStrike</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap');
 
@@ -39,24 +38,6 @@
             background: var(--paper);
             box-shadow: 0 24px 70px rgba(76, 59, 35, .15);
         }
-
-        .welcome {
-            min-height: 520px;
-            display: grid;
-            place-items: center;
-            padding: 48px 32px;
-            text-align: center;
-            color: white;
-            background: var(--teal);
-        }
-
-        .welcome-content { max-width: 480px; }
-        .welcome-mark { margin: 0 0 18px; font-size: 3.5rem; }
-        .welcome h1 { margin: 0; font-size: clamp(2.5rem, 8vw, 4.5rem); line-height: 1; }
-        .welcome p { margin: 18px auto 30px; color: #d9f0e9; font-size: 1.05rem; }
-        #start-button { display: inline-block; padding: 14px 30px; border: 0; border-radius: 999px; color: var(--ink); background: var(--gold); cursor: pointer; font: inherit; font-weight: 700; text-decoration: none; box-shadow: 0 8px 0 rgba(23, 33, 43, .12); transition: transform .18s ease, background .18s ease; }
-        #start-button:hover, #start-button:focus-visible { background: #f7c96e; transform: translateY(-2px); outline: 3px solid rgba(244, 189, 85, .4); }
-        #start-button:active { transform: translateY(2px); box-shadow: 0 4px 0 rgba(23, 33, 43, .12); }
 
         header {
             padding: 38px 32px 32px;
@@ -99,6 +80,8 @@
         #outcome.draw { color: #a16a18; }
         #reset { margin-top: 22px; padding: 10px 18px; border: 0; border-radius: 999px; color: var(--ink); background: var(--gold); cursor: pointer; font: inherit; font-weight: 700; }
         #reset:hover, #reset:focus-visible { background: #f7c96e; outline: 3px solid rgba(244, 189, 85, .35); }
+        #back { display: inline-block; margin-top: 20px; color: var(--teal); font-size: .9rem; font-weight: 700; text-decoration: none; }
+        #back:hover, #back:focus-visible { color: var(--coral); }
 
         @media (max-width: 520px) {
             header, .game { padding-left: 20px; padding-right: 20px; }
@@ -111,15 +94,80 @@
 </head>
 <body>
     <main>
-        <section class="welcome" aria-label="Welcome screen">
-            <div class="welcome-content">
-                <p class="welcome-mark">🐍 💧 🔫</p>
-                <h1>Welcome to ClashZone</h1>
-                <p>Step into the arena and challenge the computer in a quick game of Snake, Water, and Gun.</p>
-                <a id="start-button" href="game.html">Start Game</a>
+        <header>
+            <p class="eyebrow">A quick hand game</p>
+            <h1>TriStrike</h1>
+            <p>Snake, water, or gun. Choose your move.</p>
+        </header>
+        <section class="game" aria-label="Game board">
+            <div class="scoreboard" aria-live="polite">
+                <div class="score"><span>You</span><strong id="user-score">0</strong></div>
+                <div class="versus">VS</div>
+                <div class="score"><span>Computer</span><strong id="computer-score">0</strong></div>
+            </div>
+            <p class="prompt">Make your choice</p>
+            <div class="choices">
+                <button class="choice" data-choice="s"><span class="icon">🐍</span>Snake<small>beats Water</small></button>
+                <button class="choice" data-choice="w"><span class="icon">💧</span>Water<small>beats Gun</small></button>
+                <button class="choice" data-choice="g"><span class="icon">🔫</span>Gun<small>beats Snake</small></button>
+            </div>
+            <div class="result" aria-live="polite">
+                <h2 id="outcome">Choose a move to begin</h2>
+                <p id="round-details">The first player to take the lead wins the bragging rights.</p>
+                <button id="reset" type="button">Reset score</button>
+                <br>
+                <a id="back" href="index.html">Back to ClashZone</a>
             </div>
         </section>
     </main>
+    <script>
+        const choices = {
+            s: { name: 'Snake', icon: '🐍' },
+            w: { name: 'Water', icon: '💧' },
+            g: { name: 'Gun', icon: '🔫' }
+        };
+        const beats = { s: 'w', w: 'g', g: 's' };
+        let userScore = 0;
+        let computerScore = 0;
+
+        function playGame(userChoice) {
+            const keys = Object.keys(choices);
+            const computerChoice = keys[Math.floor(Math.random() * keys.length)];
+            const outcome = document.getElementById('outcome');
+            const details = document.getElementById('round-details');
+
+            outcome.className = '';
+            if (userChoice === computerChoice) {
+                outcome.textContent = 'It\'s a draw!';
+                outcome.classList.add('draw');
+            } else if (beats[userChoice] === computerChoice) {
+                userScore++;
+                outcome.textContent = 'You win this round!';
+                outcome.classList.add('win');
+            } else {
+                computerScore++;
+                outcome.textContent = 'Computer wins this round.';
+                outcome.classList.add('lose');
+            }
+
+            details.textContent = `${choices[userChoice].icon} ${choices[userChoice].name} vs ${choices[computerChoice].icon} ${choices[computerChoice].name}`;
+            document.getElementById('user-score').textContent = userScore;
+            document.getElementById('computer-score').textContent = computerScore;
+        }
+
+        document.querySelectorAll('.choice').forEach((button) => {
+            button.addEventListener('click', () => playGame(button.dataset.choice));
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            userScore = 0;
+            computerScore = 0;
+            document.getElementById('user-score').textContent = '0';
+            document.getElementById('computer-score').textContent = '0';
+            document.getElementById('outcome').textContent = 'Choose a move to begin';
+            document.getElementById('outcome').className = '';
+            document.getElementById('round-details').textContent = 'The first player to take the lead wins the bragging rights.';
+        });
+    </script>
 </body>
 </html>
-```
